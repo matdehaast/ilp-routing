@@ -1,6 +1,6 @@
-import PrefixMap from './prefix-map'
-import { Route } from './types/routing'
-import { uuid } from './lib/utils'
+import PrefixMap from '../lib/prefix-map'
+import { Route } from '../types/routing'
+import { uuid } from '../lib/utils'
 
 export interface RouteUpdate {
   epoch: number,

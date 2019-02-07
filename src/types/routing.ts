@@ -6,5 +6,9 @@ export interface IncomingRoute {
 export interface Route {
   nextHop: string,
   path: string[],
-  auth: Buffer
+  weight?: number
+}
+
+export interface BroadcastRoute extends Route {
+  prefix: string
 }

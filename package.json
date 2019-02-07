@@ -30,6 +30,7 @@
   "dependencies": {
     "@types/debug": "^0.0.31",
     "debug": "^4.1.0",
+    "ilp-protocol-ccp": "^1.1.1",
     "lodash": "^4.17.11",
     "supports-color": "^5.5.0"
   },

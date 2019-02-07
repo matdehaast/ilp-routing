@@ -2,8 +2,8 @@ import * as Chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as sinon from 'sinon';
-import { Router } from '../src';
-import { Peer } from '../src/peer';
+import { Router, PeerController } from '../src';
+import { Peer } from '../src/ilp-router/peer';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
 
@@ -54,8 +54,7 @@ describe('ilp-router', function () {
       assert.isTrue(table.keys().includes('g.harry'))
       assert.deepEqual(table.resolve('g.harry.sally'), {
         nextHop: 'harry',
-        path: [],
-        auth: Buffer.from('')
+        path: []
       })
     })
 
@@ -82,7 +81,7 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', dummyHandler)
+      router.addPeer('harry', (payload) => Promise.resolve(payload))
       router.addRoute('harry', {
         prefix: 'g.harry',
         path: [],
@@ -105,5 +104,9 @@ describe('ilp-router', function () {
 
       return Chai.expect( router.request('g.sally', payload)).to.be.rejected
     })
+  })
+
+  describe('weighting', function() {
+
   })
 })
