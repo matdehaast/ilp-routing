@@ -21,10 +21,9 @@ export function getRelationPriority (relation: Relation): number {
 }
 
 export interface CcpSenderOpts {
-  accountId: string
+  peerId: string,
   forwardingRoutingTable: ForwardingRoutingTable
-  getOwnAddress: () => string
-  getAccountRelation: (accountId: string) => Relation
+  getPeerRelation: (peer: string) => Relation
   routeExpiry: number
   routeBroadcastInterval: number
 }
@@ -34,11 +33,10 @@ const MINIMUM_UPDATE_INTERVAL = 150
 const MAX_EPOCHS_PER_UPDATE = 50
 
 export default class CcpSender {
+  private peerId: string
   private forwardingRoutingTable: ForwardingRoutingTable
-  private accountId: string
   private mode: Mode = Mode.MODE_IDLE
-  private getOwnAddress: () => string
-  private getAccountRelation: (accountId: string) => Relation
+  private getPeerRelation: (peer: string) => Relation
   private routeExpiry: number
   private routeBroadcastInterval: number
 
@@ -47,21 +45,21 @@ export default class CcpSender {
    */
   private lastKnownEpoch: number = 0
 
-  private lastUpdate: number = 0
+  private lastUpdateSentAt: number = 0
   private sendRouteUpdateTimer?: NodeJS.Timer
 
+  // TODO: possible get away with only having the relation passed in explicitly?. Then might not need accountId, getOwnAddress and getAccountRelation
+  // getAccountRelation needs to be getPeerRelation
   constructor ({
-    accountId,
+    peerId,
     forwardingRoutingTable,
-    getOwnAddress,
-    getAccountRelation,
+    getPeerRelation,
     routeExpiry,
     routeBroadcastInterval
   }: CcpSenderOpts) {
+    this.peerId = peerId
     this.forwardingRoutingTable = forwardingRoutingTable
-    this.accountId = accountId
-    this.getOwnAddress = getOwnAddress
-    this.getAccountRelation = getAccountRelation
+    this.getPeerRelation = getPeerRelation
     this.routeExpiry = routeExpiry
     this.routeBroadcastInterval = routeBroadcastInterval
   }
@@ -72,16 +70,16 @@ export default class CcpSender {
     }
   }
 
-  getAccountId () {
-    return this.accountId
-  }
-
   getLastUpdate () {
-    return this.lastUpdate
+    return this.lastUpdateSentAt
   }
 
   getLastKnownEpoch () {
     return this.lastKnownEpoch
+  }
+
+  getRoutingTableId () {
+    return this.forwardingRoutingTable.routingTableId
   }
 
   getMode () {
@@ -138,14 +136,14 @@ export default class CcpSender {
       return
     }
 
-    const lastUpdate = this.lastUpdate
+    const lastUpdateSentAt = this.lastUpdateSentAt
     const nextEpoch = this.lastKnownEpoch
 
     let delay: number
     if (nextEpoch < this.forwardingRoutingTable.currentEpoch) {
       delay = 0
     } else {
-      delay = this.routeBroadcastInterval - (Date.now() - lastUpdate)
+      delay = this.routeBroadcastInterval - (Date.now() - lastUpdateSentAt)
     }
 
     delay = Math.max(MINIMUM_UPDATE_INTERVAL, delay)
@@ -163,7 +161,8 @@ export default class CcpSender {
   }
 
   private async sendSingleRouteUpdate () {
-    this.lastUpdate = Date.now()
+    // This should maybe only be set after successfully sending?
+    this.lastUpdateSentAt = Date.now()
 
     // if (!this.plugin.isConnected()) {
     //   this.log.debug('cannot send routes, plugin not connected (yet).')
@@ -176,38 +175,13 @@ export default class CcpSender {
 
     const toEpoch = nextRequestedEpoch + allUpdates.length
 
-    const relation = this.getAccountRelation(this.accountId)
-    function isRouteUpdate (update: RouteUpdate | null): update is RouteUpdate {
-      return !!update
-    }
-
-    const updates = allUpdates
-      .filter(isRouteUpdate)
-      .map((update: RouteUpdate) => {
-        if (!update.route) return update
-
-        if (
-          // Don't send peer their own routes
-          update.route.nextHop === this.accountId ||
-
-          // Don't advertise peer and provider routes to providers
-          (
-            relation === 'parent' &&
-            ['peer', 'parent'].indexOf(this.getAccountRelation(update.route.nextHop)) !== -1
-          )
-        ) {
-          return {
-            ...update,
-            route: undefined
-          }
-        } else {
-          return update
-        }
-      })
+    const updates = this.filterRoutes(allUpdates)
 
     const newRoutes: BroadcastRoute[] = []
     const withdrawnRoutes: { prefix: string, epoch: number }[] = []
 
+    // New Routes
+    // Withdrawn Routes
     for (const update of updates) {
       if (update.route) {
         newRoutes.push({
@@ -226,7 +200,7 @@ export default class CcpSender {
     // this.log.trace('broadcasting routes to peer. speaker=%s peer=%s fromEpoch=%s toEpoch=%s routeCount=%s unreachableCount=%s', this.getOwnAddress(), this.accountId, this.lastKnownEpoch, toEpoch, newRoutes.length, withdrawnRoutes.length)
 
     const routeUpdate: CcpRouteUpdateRequest = {
-      speaker: this.getOwnAddress(),
+      speaker: '',
       routingTableId: this.forwardingRoutingTable.routingTableId,
       holdDownTime: this.routeExpiry,
       currentEpochIndex: this.forwardingRoutingTable.currentEpoch,
@@ -264,5 +238,36 @@ export default class CcpSender {
       this.lastKnownEpoch = previousNextRequestedEpoch
       throw err
     }
+  }
+
+  private filterRoutes (allUpdates: (RouteUpdate | null)[]) {
+
+    function isRouteUpdate (update: RouteUpdate | null): update is RouteUpdate {
+      return !!update
+    }
+
+    return allUpdates
+      .filter(isRouteUpdate)
+      .map((update: RouteUpdate) => {
+        if (!update.route) return update
+
+        if (
+          // Don't send peer their own routes
+          update.route.nextHop === this.peerId ||
+
+          // Don't advertise peer and provider routes to providers
+          (
+            this.getPeerRelation(this.peerId) === 'parent' &&
+            ['peer', 'parent'].indexOf(this.getPeerRelation(update.route.nextHop)) !== -1
+          )
+        ) {
+          return {
+            ...update,
+            route: undefined
+          }
+        } else {
+          return update
+        }
+      })
   }
 }

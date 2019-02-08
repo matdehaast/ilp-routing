@@ -44,3 +44,8 @@ The NPM package will not contain any TypeScript files (`*.ts`) but will have typ
   - `lint`  : Run the linter over the project
   - `test`  : Run the unit tests and produce a code coverage report
   - `doc`   : Build the docs
+
+### Future notes/reading
+Implement BGP type path based filtering
+https://www.cisco.com/c/en/us/support/docs/ip/border-gateway-protocol-bgp/13753-25.html#bestpath
+Multipath could also be an interesting area to pursue.

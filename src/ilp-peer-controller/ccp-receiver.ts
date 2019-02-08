@@ -10,38 +10,31 @@ import {
 
 export interface CcpReceiverOpts {
   handleData: any
-  accountId: string
 }
 
 const ROUTE_CONTROL_RETRY_INTERVAL = 30000
 
 export default class CcpReceiver {
-  private accountId: string
   private routes: PrefixMap<IncomingRoute>
-  private expiry: number = 0
+  private expiry: number = 0 // Currently not used
 
   /**
    * Current routing table id used by our peer.
    *
    * We'll reset our epoch if this changes.
    */
-  private routingTableId: string = '00000000-0000-0000-0000-000000000000'
+  private routingTableId: string = '00000000-0000-0000-0000-000000000000' // Based on the forwarding routing table of our peer
   /**
    * Epoch index up to which our peer has sent updates
    */
   private epoch: number = 0
 
-  constructor ({ accountId }: CcpReceiverOpts) {
-    this.accountId = accountId
+  constructor (options: CcpReceiverOpts) {
     this.routes = new PrefixMap()
   }
 
   bump (holdDownTime: number) {
     this.expiry = Math.max(Date.now() + holdDownTime, this.expiry)
-  }
-
-  getAccountId () {
-    return this.accountId
   }
 
   getExpiry () {
@@ -67,6 +60,11 @@ export default class CcpReceiver {
     }
   }
 
+  /**
+   * TODO: Change the return of changedPrefix model maybe?
+   * @param param0 route update request
+   * @returns array of changed prefixes
+   */
   handleRouteUpdate ({
     speaker,
     routingTableId,
@@ -78,6 +76,7 @@ export default class CcpReceiver {
   }: CcpRouteUpdateRequest): string[] {
     this.bump(holdDownTime)
 
+    // TODO: What should happen if the routingTableId has changed? Surely we should invalidate all the address from this peer?
     if (this.routingTableId !== routingTableId) {
       // this.log.trace('saw new routing table. oldId=%s newId=%s', this.routingTableId, routingTableId)
       this.routingTableId = routingTableId

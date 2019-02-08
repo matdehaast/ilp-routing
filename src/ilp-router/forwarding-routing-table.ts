@@ -11,5 +11,5 @@ export interface RouteUpdate {
 export default class ForwardingRoutingTable extends PrefixMap<RouteUpdate> {
   public routingTableId: string = uuid()
   public log: (RouteUpdate | null)[] = []
-  public currentEpoch: number = 0
+  public currentEpoch: number = 0 // Superfluous? As the log length is analogous to the epoch it seems.
 }
