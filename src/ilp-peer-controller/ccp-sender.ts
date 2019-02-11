@@ -255,6 +255,8 @@ export default class CcpSender {
           // Don't send peer their own routes
           update.route.nextHop === this.peerId ||
 
+          // TODO: Understand why this is the case.
+          // Essentially dont send your peer or other parents routes to your parent
           // Don't advertise peer and provider routes to providers
           (
             this.getPeerRelation(this.peerId) === 'parent' &&

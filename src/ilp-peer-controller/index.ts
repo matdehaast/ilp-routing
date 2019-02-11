@@ -1,5 +1,5 @@
 import CcpReceiver from './ccp-receiver'
-import CcpSender from './ccp-sender'
+import CcpSender, { Relation } from './ccp-sender'
 import { CcpRouteControlRequest, CcpRouteUpdateRequest } from 'ilp-protocol-ccp'
 import ForwardingRoutingTable from '../ilp-router/forwarding-routing-table'
 
@@ -7,7 +7,8 @@ export interface PeerControllerOps {
   peerId: string,
   isSender?: boolean,
   isReceiver?: boolean,
-  ccpRequestHandler: (ccpRequest: any) => Promise<any>
+  ccpRequestHandler: (ccpRequest: any) => Promise<any>,
+  getPeerRelation: (peerId: string) => Relation
 }
 
 export class PeerController {
@@ -24,7 +25,7 @@ export class PeerController {
       this.ccpSender = new CcpSender({
         peerId: options.peerId,
         forwardingRoutingTable: new ForwardingRoutingTable(),
-        getPeerRelation: () => 'peer',
+        getPeerRelation: options.getPeerRelation,
         routeBroadcastInterval: 30000,
         routeExpiry: 45000
       })

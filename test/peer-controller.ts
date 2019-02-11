@@ -5,12 +5,14 @@ import * as sinon from 'sinon';
 import { Router, PeerController } from '../src';
 import { Peer } from '../src/ilp-router/peer';
 import { CcpRouteUpdateRequest, CcpRoute, CcpRouteControlRequest, Mode } from 'ilp-protocol-ccp';
-import CcpSender from '../src/ilp-peer-controller/ccp-sender';
+import CcpSender, { Relation } from '../src/ilp-peer-controller/ccp-sender';
 import { RouteUpdate } from '../src/ilp-router/forwarding-routing-table';
+import { filter } from 'minimatch';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
 
 const dummyHandler = ()  => Promise.resolve('Test')
+const dummyPeerResolver = (peerId: string) => 'parent' as Relation
 
 describe('ilp-peer-controller', function () {
 
@@ -20,7 +22,8 @@ describe('ilp-peer-controller', function () {
       const peerController = new PeerController({
         peerId: 'harry',
         ccpRequestHandler: dummyHandler, 
-        isSender: true
+        isSender: true,
+        getPeerRelation: dummyPeerResolver
       })
 
       assert.isDefined(peerController.getSender())
@@ -31,7 +34,9 @@ describe('ilp-peer-controller', function () {
       const peerController = new PeerController({
         peerId: 'harry',
         ccpRequestHandler: dummyHandler, 
-        isReceiver: true})
+        isReceiver: true,
+        getPeerRelation: dummyPeerResolver
+      })
 
       assert.isDefined(peerController.getReceiver())
       assert.isUndefined(peerController.getSender())
@@ -45,7 +50,9 @@ describe('ilp-peer-controller', function () {
       peerController = new PeerController({
         peerId: 'harry',
         ccpRequestHandler: dummyHandler, 
-        isReceiver: true})
+        isReceiver: true,
+        getPeerRelation: dummyPeerResolver
+      })
     })
 
     it('can receive a routeUpdate from a sender', function () {
@@ -156,7 +163,9 @@ describe('ilp-peer-controller', function () {
       peerController = new PeerController({
         peerId: 'harry',
         ccpRequestHandler: dummyHandler, 
-        isSender: true})
+        isSender: true,
+        getPeerRelation: dummyPeerResolver
+      })
       sender = peerController.getSender() as CcpSender
     })
 
@@ -252,6 +261,7 @@ describe('ilp-peer-controller', function () {
         beforeEach(function() {
           const peerRelations = {
             'harry': 'parent',
+            'harry2': 'parent',
             'sally': 'peer',
             'ira': 'peer',
             'helen': 'child',
@@ -260,7 +270,8 @@ describe('ilp-peer-controller', function () {
           peerController = new PeerController({
             peerId: 'harry',
             ccpRequestHandler: dummyHandler, 
-            isSender: true
+            isSender: true,
+            getPeerRelation: (peerId: string) => peerRelations[peerId]
           })
           sender = peerController.getSender() as CcpSender
         })
@@ -276,7 +287,7 @@ describe('ilp-peer-controller', function () {
           assert.equal(filteredUpdates.length, 0)
         })
 
-        it('filters out none route updates', function() {
+        it('does not filter out updates with a null route', function() {
           const routeUpdate: RouteUpdate = {
             epoch: 1,
             prefix: 'g.route.test'
@@ -288,13 +299,96 @@ describe('ilp-peer-controller', function () {
 
           const filteredUpdates = sender['filterRoutes'](routeUpdates)
 
-          assert.equal(filteredUpdates.length, 0)
+          assert.equal(filteredUpdates.length, 1)
+          assert.deepEqual(filteredUpdates[0],routeUpdate)
+        })
+
+        it('filters out route where peer is next hop', function() {
+          const routeUpdate: RouteUpdate = {
+            epoch: 1,
+            prefix: 'g.route.test',
+            route: {
+              nextHop: 'harry',
+              path: []
+            }
+          }
+          const routeUpdates: (RouteUpdate | null)[] = [
+            routeUpdate
+          ]
+          assert.equal(routeUpdates.length, 1)
+
+          const filteredUpdates = sender['filterRoutes'](routeUpdates)
+
+          assert.equal(filteredUpdates.length, 1)
+          assert.deepEqual(filteredUpdates[0], {...routeUpdate, route: undefined})
+        })
+
+        it('does not filter out other updates', function() {
+          const routeUpdate: RouteUpdate = {
+            epoch: 1,
+            prefix: 'g.route.test',
+            route: {
+              nextHop: 'helen',
+              path: []
+            }
+          }
+          const routeUpdates: (RouteUpdate | null)[] = [
+            routeUpdate
+          ]
+          assert.equal(routeUpdates.length, 1)
+
+          const filteredUpdates = sender['filterRoutes'](routeUpdates)
+
+          assert.equal(filteredUpdates.length, 1)
+          assert.deepEqual(filteredUpdates[0], {...routeUpdate})
+        })
+
+        it('filters out peer routes sent to parent', function() {
+          const routeUpdate: RouteUpdate = {
+            epoch: 1,
+            prefix: 'g.route.test',
+            route: {
+              nextHop: 'sally',
+              path: []
+            }
+          }
+          const routeUpdates: (RouteUpdate | null)[] = [
+            routeUpdate
+          ]
+          assert.equal(routeUpdates.length, 1)
+
+          const filteredUpdates = sender['filterRoutes'](routeUpdates)
+
+          console.log(filteredUpdates)
+
+          assert.equal(filteredUpdates.length, 1)
+          assert.deepEqual(filteredUpdates[0], {...routeUpdate, route: undefined})
+        })
+
+        it('filters out other parent routes sent to parent', function() {
+          const routeUpdate: RouteUpdate = {
+            epoch: 1,
+            prefix: 'g.route.test',
+            route: {
+              nextHop: 'harry2',
+              path: []
+            }
+          }
+          const routeUpdates: (RouteUpdate | null)[] = [
+            routeUpdate
+          ]
+          assert.equal(routeUpdates.length, 1)
+
+          const filteredUpdates = sender['filterRoutes'](routeUpdates)
+
+          console.log(filteredUpdates)
+
+          assert.equal(filteredUpdates.length, 1)
+          assert.deepEqual(filteredUpdates[0], {...routeUpdate, route: undefined})
         })
 
       })
-
     })
     
-  
   })
 })
