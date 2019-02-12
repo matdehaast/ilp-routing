@@ -15,7 +15,7 @@ describe('ilp-router', function () {
     it('can add a peer', function () {
       const router = new Router()
 
-      router.addPeer('harry', dummyHandler)
+      router.addPeer('harry', 'peer', dummyHandler)
 
       const peer = router.getPeer('harry')
       
@@ -24,7 +24,7 @@ describe('ilp-router', function () {
 
     it('can remove a peer', function () {
       const router = new Router()
-      router.addPeer('harry', dummyHandler)
+      router.addPeer('harry', 'peer', dummyHandler)
 
       router.removePeer('harry')
 
@@ -40,7 +40,7 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', dummyHandler)
+      router.addPeer('harry', 'peer', dummyHandler)
     })
 
     it('can add a route for a peer', function() {
@@ -81,7 +81,7 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', (payload) => Promise.resolve(payload))
+      router.addPeer('harry', 'peer', (payload) => Promise.resolve(payload))
       router.addRoute('harry', {
         prefix: 'g.harry',
         path: [],

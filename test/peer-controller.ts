@@ -4,9 +4,9 @@ import 'mocha';
 import * as sinon from 'sinon';
 import { Router, PeerController } from '../src';
 import { Peer } from '../src/ilp-router/peer';
-import { CcpRouteUpdateRequest, CcpRoute, CcpRouteControlRequest, Mode } from 'ilp-protocol-ccp';
+import { CcpRouteUpdateRequest, CcpRoute, CcpRouteControlRequest, Mode } from 'ilp-protocol-ccp'
 import CcpSender, { Relation } from '../src/ilp-peer-controller/ccp-sender';
-import { RouteUpdate } from '../src/ilp-router/forwarding-routing-table';
+import ForwardingRoutingTable, { RouteUpdate } from '../src/ilp-router/forwarding-routing-table'
 import { filter } from 'minimatch';
 import { IlpPrepare, IlpReply, IlpReject } from 'ilp-packet';
 Chai.use(chaiAsPromised)
@@ -15,7 +15,7 @@ const assert = Object.assign(Chai.assert, sinon.assert)
 const dummyHandler = ()  => Promise.resolve('Test')
 const dummyPeerResolver = (peerId: string) => 'parent' as Relation
 const dummySendData = (packet: IlpPrepare) => Promise.resolve({data: Buffer.from(''), fulfillment: Buffer.from('')} as IlpReply)
-
+const forwardingRoutingTable = new ForwardingRoutingTable;
 describe('ilp-peer-controller', function () {
 
   describe('instantiation', function () {
@@ -26,7 +26,8 @@ describe('ilp-peer-controller', function () {
         ccpRequestHandler: dummyHandler, 
         isSender: true,
         getPeerRelation: dummyPeerResolver,
-        sendData: dummySendData
+        sendData: dummySendData,
+        forwardingRoutingTable: forwardingRoutingTable
       })
 
       assert.isDefined(peerController.getSender())
@@ -39,7 +40,8 @@ describe('ilp-peer-controller', function () {
         ccpRequestHandler: dummyHandler, 
         isReceiver: true,
         getPeerRelation: dummyPeerResolver,
-        sendData: dummySendData
+        sendData: dummySendData,
+        forwardingRoutingTable: forwardingRoutingTable
       })
 
       assert.isDefined(peerController.getReceiver())
@@ -56,7 +58,8 @@ describe('ilp-peer-controller', function () {
         ccpRequestHandler: dummyHandler, 
         isReceiver: true,
         getPeerRelation: dummyPeerResolver,
-        sendData: dummySendData
+        sendData: dummySendData,
+        forwardingRoutingTable: forwardingRoutingTable
       })
     })
 
@@ -171,7 +174,8 @@ describe('ilp-peer-controller', function () {
             return new Promise((resolve, reject) => {
               done()
             })
-          }
+          },
+          forwardingRoutingTable: forwardingRoutingTable
         })
         const receiver = peerController.getReceiver()
         if(receiver) {
@@ -189,7 +193,8 @@ describe('ilp-peer-controller', function () {
             return new Promise((resolve, reject) => {
               resolve({data: Buffer.from(''), fulfillment: Buffer.from('')} as IlpReply)
             })
-          }
+          },
+          forwardingRoutingTable: forwardingRoutingTable
         })
         const receiver = peerController.getReceiver()
         if(receiver) {
@@ -210,7 +215,8 @@ describe('ilp-peer-controller', function () {
         ccpRequestHandler: dummyHandler, 
         isSender: true,
         getPeerRelation: dummyPeerResolver,
-        sendData: dummySendData
+        sendData: dummySendData,
+        forwardingRoutingTable: forwardingRoutingTable
       })
       sender = peerController.getSender() as CcpSender
     })
@@ -317,7 +323,8 @@ describe('ilp-peer-controller', function () {
             ccpRequestHandler: dummyHandler, 
             isSender: true,
             getPeerRelation: (peerId: string) => peerRelations[peerId],
-            sendData: dummySendData
+            sendData: dummySendData,
+            forwardingRoutingTable: forwardingRoutingTable
           })
           sender = peerController.getSender() as CcpSender
         })

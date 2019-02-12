@@ -3,6 +3,7 @@ import RoutingTable from './routing-table'
 import { Route, IncomingRoute } from '../types/routing'
 import ForwardingRoutingTable, { RouteUpdate } from './forwarding-routing-table'
 import { canDragonFilter } from '../lib/dragon'
+import { Relation } from '../ilp-peer-controller/ccp-sender'
 
 /**
  * Terminology definitions
@@ -22,8 +23,8 @@ export class Router {
     this.peers = new Map()
   }
 
-  addPeer (name: string, handler: RequestHandler) {
-    const peer = new Peer()
+  addPeer (name: string, relation: Relation, handler: RequestHandler) {
+    const peer = new Peer(relation)
     peer.setHandler(handler)
     this.peers.set(name, peer)
   }

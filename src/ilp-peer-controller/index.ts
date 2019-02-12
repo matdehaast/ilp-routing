@@ -10,7 +10,8 @@ export interface PeerControllerOps {
   isReceiver?: boolean,
   ccpRequestHandler: (ccpRequest: any) => Promise<any>,
   sendData: (packet: IlpPrepare) => Promise<IlpReply>,
-  getPeerRelation: (peerId: string) => Relation
+  getPeerRelation: (peerId: string) => Relation,
+  forwardingRoutingTable: ForwardingRoutingTable
 }
 
 export class PeerController {
@@ -30,7 +31,7 @@ export class PeerController {
     if (options.isSender) {
       this.ccpSender = new CcpSender({
         peerId: options.peerId,
-        forwardingRoutingTable: new ForwardingRoutingTable(),
+        forwardingRoutingTable: options.forwardingRoutingTable,
         getPeerRelation: options.getPeerRelation,
         routeBroadcastInterval: 30000,
         routeExpiry: 45000,
