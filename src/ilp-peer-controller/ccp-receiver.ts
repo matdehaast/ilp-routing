@@ -1,6 +1,6 @@
 import PrefixMap from '../lib/prefix-map'
 import { IncomingRoute } from '../types/routing'
-import { Type, deserializeIlpReject } from 'ilp-packet'
+import { Type, IlpPacket, IlpPrepare, IlpReply, IlpFulfill, deserializeIlpPacket, deserializeIlpPrepare, isFulfill, isReject } from 'ilp-packet'
 import {
   CcpRouteControlRequest,
   CcpRouteUpdateRequest,
@@ -10,6 +10,7 @@ import {
 
 export interface CcpReceiverOpts {
   handleData: any
+  sendData: (packet: IlpPrepare) => Promise<IlpReply>
 }
 
 const ROUTE_CONTROL_RETRY_INTERVAL = 30000
@@ -17,6 +18,7 @@ const ROUTE_CONTROL_RETRY_INTERVAL = 30000
 export default class CcpReceiver {
   private routes: PrefixMap<IncomingRoute>
   private expiry: number = 0 // Currently not used
+  private sendData: (packet: IlpPrepare) => Promise<IlpReply>
 
   /**
    * Current routing table id used by our peer.
@@ -31,6 +33,7 @@ export default class CcpReceiver {
 
   constructor (options: CcpReceiverOpts) {
     this.routes = new PrefixMap()
+    this.sendData = options.sendData
   }
 
   bump (holdDownTime: number) {
@@ -145,27 +148,28 @@ export default class CcpReceiver {
       features: []
     }
 
-    // TODO: Send Data method needed
-    // this.plugin.sendData(serializeCcpRouteControlRequest(routeControl))
-    //   .then(data => {
-    //     if (data[0] === Type.TYPE_ILP_FULFILL) {
-    //       // this.log.trace('successfully sent route control message.')
-    //     } else if (data[0] === Type.TYPE_ILP_REJECT) {
-    //       // this.log.debug('route control message was rejected. rejection=%j', deserializeIlpReject(data))
-    //       throw new Error('route control message rejected.')
-    //     } else {
-    //       // this.log.debug('unknown response packet type. type=' + data[0])
-    //       throw new Error('route control message returned unknown response.')
-    //     }
-    //   })
-    //   .catch((err: any) => {
-    //     const errInfo = (err instanceof Object && err.stack) ? err.stack : err
-    //     // this.log.debug('failed to set route control information on peer. error=%s', errInfo)
-    //     // TODO: Should have more elegant, thought-through retry logic here
-    //     const retryTimeout = setTimeout(this.sendRouteControl, ROUTE_CONTROL_RETRY_INTERVAL)
+    // TODO: Temp till changes can be implemented into ilp-protocol-ccp
+    const packet = deserializeIlpPrepare(serializeCcpRouteControlRequest(routeControl))
+    this.sendData(packet)
+      .then(replyPacket => {
+        if (isFulfill(replyPacket)) {
+          // this.log.trace('successfully sent route control message.')
+        } else if (isReject(replyPacket)) {
+          // this.log.debug('route control message was rejected. rejection=%j', deserializeIlpReject(data))
+          throw new Error('route control message rejected.')
+        } else {
+          // this.log.debug('unknown response packet type. type=' + data[0])
+          throw new Error('route control message returned unknown response.')
+        }
+      })
+      .catch((err: any) => {
+        const errInfo = (err instanceof Object && err.stack) ? err.stack : err
+        // this.log.debug('failed to set route control information on peer. error=%s', errInfo)
+        // TODO: Should have more elegant, thought-through retry logic here
+        const retryTimeout = setTimeout(this.sendRouteControl, ROUTE_CONTROL_RETRY_INTERVAL)
 
-    //     retryTimeout.unref()
-    //   })
+        retryTimeout.unref()
+      })
   }
 
   private addRoute (route: IncomingRoute) {

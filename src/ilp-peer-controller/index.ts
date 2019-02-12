@@ -2,12 +2,14 @@ import CcpReceiver from './ccp-receiver'
 import CcpSender, { Relation } from './ccp-sender'
 import { CcpRouteControlRequest, CcpRouteUpdateRequest } from 'ilp-protocol-ccp'
 import ForwardingRoutingTable from '../ilp-router/forwarding-routing-table'
+import { IlpPacket, IlpPrepare, IlpReply } from 'ilp-packet'
 
 export interface PeerControllerOps {
   peerId: string,
   isSender?: boolean,
   isReceiver?: boolean,
   ccpRequestHandler: (ccpRequest: any) => Promise<any>,
+  sendData: (packet: IlpPrepare) => Promise<IlpReply>,
   getPeerRelation: (peerId: string) => Relation
 }
 
@@ -16,10 +18,14 @@ export class PeerController {
   private ccpSender?: CcpSender
   private ccpReceiver?: CcpReceiver
   private ccpRequestHandler: (ccpRequest: any) => Promise<any>
+  sendData: (packet: IlpPrepare) => Promise<IlpReply>
 
   constructor (options: PeerControllerOps) {
 
+    // TODO: Not currently using this piece of code. Need to see why I needed it.
     this.ccpRequestHandler = options.ccpRequestHandler
+
+    this.sendData = options.sendData
 
     if (options.isSender) {
       this.ccpSender = new CcpSender({
@@ -27,13 +33,15 @@ export class PeerController {
         forwardingRoutingTable: new ForwardingRoutingTable(),
         getPeerRelation: options.getPeerRelation,
         routeBroadcastInterval: 30000,
-        routeExpiry: 45000
+        routeExpiry: 45000,
+        sendData: this.sendData
       })
     }
 
     // Setup receiver
     if (options.isReceiver) {
       this.ccpReceiver = new CcpReceiver({
+        sendData: this.sendData,
         handleData: () => 'test'
       })
     }

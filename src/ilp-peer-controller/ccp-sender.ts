@@ -8,6 +8,7 @@ import {
   ModeReverseMap,
   serializeCcpRouteUpdateRequest
 } from 'ilp-protocol-ccp'
+import { IlpPrepare, IlpReply, deserializeIlpPrepare } from 'ilp-packet';
 
 export type Relation = 'parent' | 'child' | 'peer' | 'local'
 
@@ -23,7 +24,8 @@ export function getRelationPriority (relation: Relation): number {
 export interface CcpSenderOpts {
   peerId: string,
   forwardingRoutingTable: ForwardingRoutingTable
-  getPeerRelation: (peer: string) => Relation
+  getPeerRelation: (peer: string) => Relation,
+  sendData: (packet: IlpPrepare) => Promise<IlpReply>,
   routeExpiry: number
   routeBroadcastInterval: number
 }
@@ -37,6 +39,7 @@ export default class CcpSender {
   private forwardingRoutingTable: ForwardingRoutingTable
   private mode: Mode = Mode.MODE_IDLE
   private getPeerRelation: (peer: string) => Relation
+  private sendData: (packet: IlpPrepare) => Promise<IlpReply>
   private routeExpiry: number
   private routeBroadcastInterval: number
 
@@ -55,13 +58,15 @@ export default class CcpSender {
     forwardingRoutingTable,
     getPeerRelation,
     routeExpiry,
-    routeBroadcastInterval
+    routeBroadcastInterval,
+    sendData
   }: CcpSenderOpts) {
     this.peerId = peerId
     this.forwardingRoutingTable = forwardingRoutingTable
     this.getPeerRelation = getPeerRelation
     this.routeExpiry = routeExpiry
     this.routeBroadcastInterval = routeBroadcastInterval
+    this.sendData = sendData
   }
 
   stop () {
@@ -228,10 +233,12 @@ export default class CcpSender {
       timer.unref()
     })
 
+    // TODO: Temp whilst need to update ccp
+    const packet = deserializeIlpPrepare(serializeCcpRouteUpdateRequest(routeUpdate))
     try {
       await Promise.race([
         // TODO: Handle sendData
-        // this.plugin.sendData(serializeCcpRouteUpdateRequest(routeUpdate)),
+        this.sendData(packet),
         timerPromise
       ])
     } catch (err) {

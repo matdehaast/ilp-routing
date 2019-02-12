@@ -1,6 +1,8 @@
 import { Peer, RequestHandler } from './peer'
 import RoutingTable from './routing-table'
 import { Route, IncomingRoute } from '../types/routing'
+import ForwardingRoutingTable, { RouteUpdate } from './forwarding-routing-table'
+import { canDragonFilter } from '../lib/dragon'
 
 /**
  * Terminology definitions
@@ -10,11 +12,13 @@ import { Route, IncomingRoute } from '../types/routing'
 export class Router {
 
   private peers: Map<string, Peer>
+  private ownAddress: string
   private routingTable: RoutingTable
-  // private forwardingRoutingTable: ForwardingRoutingTable
+  private forwardingRoutingTable: ForwardingRoutingTable
 
   constructor () {
     this.routingTable = new RoutingTable()
+    this.forwardingRoutingTable = new ForwardingRoutingTable()
     this.peers = new Map()
   }
 
@@ -30,6 +34,14 @@ export class Router {
 
   getPeer (name: string) {
     return this.peers.get(name)
+  }
+
+  setOwnAddress (address: string) {
+    this.ownAddress = address
+  }
+
+  getOwnAddress () {
+    return this.ownAddress
   }
 
   addRoute (peer: string, route: IncomingRoute) {
@@ -158,17 +170,6 @@ export class Router {
     // }
   }
 
-  // getGlobalPrefix () {
-  //   switch (this.config.env) {
-  //     case 'production':
-  //       return 'g'
-  //     case 'test':
-  //       return 'test'
-  //     default:
-  //       throw new Error('invalid value for `env` config. env=' + this.config.env)
-  //   }
-  // }
-
   /**
    * Get currentBest from localRoutingTable
    * check if newNextHop has changed. If it has, update localRoutingTable and  forwardingRouteTable
@@ -189,11 +190,106 @@ export class Router {
         this.routingTable.delete(prefix)
       }
 
-      // this.updateForwardingRoute(prefix, route)
+      this.updateForwardingRoute(prefix, route)
 
       return true
     }
 
     return false
+  }
+
+  // TODO: Temp
+  private getGlobalPrefix () {
+    return 'g'
+  }
+
+  /**
+   * updating forwarding routing table
+   * 1. If route is defined.
+   * 2.   Update path and auth on route
+   * 3.   If various checks on route set route to undefined
+   * 4. Get Current best from forwarding Routing Table
+   * 5. if newNextHop
+   * 6.   Update the forwarding routing table
+   * 7.   Check to apply dragon filtering based on the update on other prefixes.
+   * 8. Else do nothing
+   * @param prefix prefix
+   * @param route route
+   */
+  private updateForwardingRoute (prefix: string, route?: Route) {
+    if (route) {
+      route = {
+        ...route,
+        path: [this.getOwnAddress(), ...route.path]
+      }
+
+      if (
+        // Routes must start with the global prefix
+        !prefix.startsWith(this.getGlobalPrefix()) ||
+
+        // Don't publish the default route
+        prefix === this.getGlobalPrefix() ||
+
+        // Don't advertise local customer routes that we originated. Packets for
+        // these destinations should still reach us because we are advertising our
+        // own address as a prefix.
+        (
+          prefix.startsWith(this.getOwnAddress() + '.') &&
+          route.path.length === 1
+        ) // ||
+
+        // canDragonFilter(
+        //   this.forwardingRoutingTable,
+        //   this.getAccountRelation,
+        //   prefix,
+        //   route
+        // )
+      ) {
+        route = undefined
+      }
+    }
+
+    const currentBest = this.forwardingRoutingTable.get(prefix)
+
+    const currentNextHop = currentBest && currentBest.route && currentBest.route.nextHop
+    const newNextHop = route && route.nextHop
+
+    if (currentNextHop !== newNextHop) {
+      const epoch = this.forwardingRoutingTable.currentEpoch++
+      const routeUpdate: RouteUpdate = {
+        prefix,
+        route,
+        epoch
+      }
+
+      this.forwardingRoutingTable.insert(prefix, routeUpdate)
+
+      // log.trace('logging route update. update=%j', routeUpdate)
+
+      // Remove from forwarding routing table.
+      if (currentBest) {
+        this.forwardingRoutingTable.log[currentBest.epoch] = null
+      }
+
+      this.forwardingRoutingTable.log[epoch] = routeUpdate
+
+      if (route) {
+        // We need to re-check any prefixes that start with this prefix to see
+        // if we can apply DRAGON filtering.
+        //
+        // Note that we do this check *after* we have added the new route above.
+        const subPrefixes = this.forwardingRoutingTable.getKeysStartingWith(prefix)
+
+        for (const subPrefix of subPrefixes) {
+          if (subPrefix === prefix) continue
+
+          const routeUpdate = this.forwardingRoutingTable.get(subPrefix)
+
+          if (!routeUpdate || !routeUpdate.route) continue
+
+          this.updateForwardingRoute(subPrefix, routeUpdate.route)
+        }
+      }
+    }
   }
 }
