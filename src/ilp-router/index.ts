@@ -60,6 +60,10 @@ export class Router {
     return this.routingTable
   }
 
+  getForwardingRoutingTable (): ForwardingRoutingTable {
+    return this.forwardingRoutingTable
+  }
+
   request (prefix: string, payload: any): Promise<any> {
     return new Promise((resolve,reject) => {
       const route = this.routingTable.resolve(prefix)

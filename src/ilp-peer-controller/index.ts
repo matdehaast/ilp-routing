@@ -8,7 +8,7 @@ export interface PeerControllerOps {
   peerId: string,
   isSender?: boolean,
   isReceiver?: boolean,
-  ccpRequestHandler: (ccpRequest: any) => Promise<any>,
+  ccpRequestHandler?: (ccpRequest: any) => Promise<any>,
   sendData: (packet: IlpPrepare) => Promise<IlpReply>,
   getPeerRelation: (peerId: string) => Relation,
   forwardingRoutingTable: ForwardingRoutingTable
@@ -18,7 +18,7 @@ export class PeerController {
 
   private ccpSender?: CcpSender
   private ccpReceiver?: CcpReceiver
-  private ccpRequestHandler: (ccpRequest: any) => Promise<any>
+  private ccpRequestHandler?: (ccpRequest: any) => Promise<any>
   sendData: (packet: IlpPrepare) => Promise<IlpReply>
 
   constructor (options: PeerControllerOps) {
