@@ -23,9 +23,8 @@ export class Router {
     this.peers = new Map()
   }
 
-  addPeer (name: string, relation: Relation, handler: RequestHandler) {
+  addPeer (name: string, relation: Relation) {
     const peer = new Peer(relation)
-    peer.setHandler(handler)
     this.peers.set(name, peer)
   }
 
@@ -64,19 +63,14 @@ export class Router {
     return this.forwardingRoutingTable
   }
 
-  request (prefix: string, payload: any): Promise<any> {
-    return new Promise((resolve,reject) => {
-      const route = this.routingTable.resolve(prefix)
-      const nextHop = route && route.nextHop
-      if (nextHop) {
-        const peer = this.peers.get(nextHop)
-        if (peer) {
-          resolve(peer.handleRequest(payload))
-        }
-      } else {
-        reject("Can't route the request due to no route found for given prefix")
-      }
-    })
+  nextHop (prefix: string): string {
+    const route = this.routingTable.resolve(prefix)
+    const nextHop = route && route.nextHop
+    if (nextHop) {
+      return nextHop
+    } else {
+      throw new Error("Can't route the request due to no route found for given prefix")
+    }
   }
 
   /**

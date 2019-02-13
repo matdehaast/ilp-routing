@@ -4,18 +4,18 @@ import 'mocha';
 import * as sinon from 'sinon';
 import { Router, PeerController } from '../src';
 import { Peer } from '../src/ilp-router/peer';
+import { AssertionError } from 'assert';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
-
-const dummyHandler = ()  => Promise.resolve('Test')
 
 describe('ilp-router', function () {
 
   describe('peer', function () {
+
     it('can add a peer', function () {
       const router = new Router()
 
-      router.addPeer('harry', 'peer', dummyHandler)
+      router.addPeer('harry', 'peer')
 
       const peer = router.getPeer('harry')
       
@@ -24,7 +24,7 @@ describe('ilp-router', function () {
 
     it('can remove a peer', function () {
       const router = new Router()
-      router.addPeer('harry', 'peer', dummyHandler)
+      router.addPeer('harry', 'peer')
 
       router.removePeer('harry')
 
@@ -40,7 +40,7 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', 'peer', dummyHandler)
+      router.addPeer('harry', 'peer')
     })
 
     it('can add a route for a peer', function() {
@@ -76,33 +76,25 @@ describe('ilp-router', function () {
     })
   })
 
-  describe('request', function() {
+  describe('nextHop', function() {
     let router: Router
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', 'peer', (payload) => Promise.resolve(payload))
+      router.addPeer('harry', 'peer')
       router.addRoute('harry', {
         prefix: 'g.harry',
         path: [],
       })
     })
 
-    it('calls peers handler if request called for route to a peer', async function() {
-      const payload = {
-        test: 123
-      }
-
-      const response = await router.request('g.harry.met.sally', payload)
-      assert.deepEqual(response, payload)
+    it('returns peerId if nextHop called for route to a peer', function() {
+      const nextHop = router.nextHop('g.harry.met.sally')
+      assert.equal(nextHop, 'harry')
     })
 
-    it('throws an error if can\'t route request', async function() {
-      const payload = {
-        test: 123
-      }
-
-      return Chai.expect( router.request('g.sally', payload)).to.be.rejected
+    it('throws an error if can\'t route request', function() {
+      assert.throws(() => router.nextHop('g.sally'))
     })
   })
 
