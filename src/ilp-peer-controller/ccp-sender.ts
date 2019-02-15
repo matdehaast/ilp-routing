@@ -8,7 +8,7 @@ import {
   ModeReverseMap,
   serializeCcpRouteUpdateRequest
 } from 'ilp-protocol-ccp'
-import { IlpPrepare, IlpReply, deserializeIlpPrepare } from 'ilp-packet';
+import { IlpPrepare, IlpReply, deserializeIlpPrepare } from 'ilp-packet'
 
 export type Relation = 'parent' | 'child' | 'peer' | 'local'
 

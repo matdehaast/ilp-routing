@@ -1,17 +1,11 @@
 import { Router, PeerController } from '../src'
 import { IlpPrepare, IlpFulfill } from 'ilp-packet'
 import { Relation } from '../src/ilp-peer-controller/ccp-sender'
-import { IncomingRoute } from '../src/types/routing';
+import { IncomingRoute } from '../src/types/routing'
 
 const router = new Router()
 
-// sally data handler
-const sallyHandler = (data: any) => new Promise((resolve, reject) => {
-  console.log(data)
-  resolve('data')
-})
-
-router.addPeer('sally', 'peer', sallyHandler)
+router.addPeer('sally', 'peer')
 
 router.addRoute('sally', { prefix: 'g.sally', path: [] })
 
@@ -55,9 +49,12 @@ if (receiver) {
 console.log(router.getRoutingTable())
 
 const func = async () => {
-  const reply = await router.request('g.sally', { mat: 'isHere' })
-  const reply1 = await router.request('g.harry', { mat: 'isHere' }).catch(err => console.log(err))
-  console.log(reply, reply1)
+  try {
+    const nextHop = router.nextHop('g.sally')
+    console.log(nextHop)
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 func()

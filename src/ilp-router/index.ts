@@ -63,6 +63,7 @@ export class Router {
     return this.forwardingRoutingTable
   }
 
+  // TODO: Maybe this shouldn't throw an error and instead just return undefined
   nextHop (prefix: string): string {
     const route = this.routingTable.resolve(prefix)
     const nextHop = route && route.nextHop
