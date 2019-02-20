@@ -2,37 +2,12 @@ import * as Chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as sinon from 'sinon';
-import { Router, PeerController } from '../src';
-import { Peer } from '../src/ilp-router/peer';
+import { Router } from '../src';
 import { AssertionError } from 'assert';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
 
 describe('ilp-router', function () {
-
-  describe('peer', function () {
-
-    it('can add a peer', function () {
-      const router = new Router()
-
-      router.addPeer('harry', 'peer')
-
-      const peer = router.getPeer('harry')
-      
-      assert.instanceOf(peer, Peer)
-    })
-
-    it('can remove a peer', function () {
-      const router = new Router()
-      router.addPeer('harry', 'peer')
-
-      router.removePeer('harry')
-
-      const peer = router.removePeer('harry')
-      
-      assert.notInstanceOf(peer, Peer)
-    })
-  })
 
   describe('routes', function() {
 
@@ -40,7 +15,6 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', 'peer')
     })
 
     it('can add a route for a peer', function() {
@@ -70,10 +44,6 @@ describe('ilp-router', function () {
       assert.isFalse(table.keys().includes('g.harry'))
       assert.isUndefined(table.resolve('g.harry.sally'))
     })
-
-    it('throws an error if trying to add a route for a peer that does not exist', function () {
-
-    })
   })
 
   describe('nextHop', function() {
@@ -81,7 +51,6 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addPeer('harry', 'peer')
       router.addRoute('harry', {
         prefix: 'g.harry',
         path: [],
@@ -101,4 +70,6 @@ describe('ilp-router', function () {
   describe('weighting', function() {
 
   })
+
+  //TODO: Need to add functionality to check that adding a route propagates to the forwardingRoutingTable or perhaps the Route Manager should handle that?
 })

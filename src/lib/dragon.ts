@@ -1,8 +1,7 @@
 import { Route } from '../types/routing'
 // import { create as createLogger } from '../common/log'
 // const log = createLogger('dragon')
-import { Relation } from '../types/relation'
-import { getRelationPriority } from '../ilp-peer-controller/ccp-sender'
+import { Relation, getRelationPriority } from '../types/relation'
 import ForwardingRoutingTable from '../ilp-router/forwarding-routing-table'
 
 /**

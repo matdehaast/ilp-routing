@@ -1,7 +1,7 @@
 import { Relation } from '../types/relation'
 import { IlpReply, IlpPrepare } from 'ilp-packet'
 import { Router } from '../ilp-router'
-import { Peer } from '../ilp-peer-controller'
+import { Peer } from '../ilp-peer'
 import { CcpRouteUpdateRequest, CcpRouteControlRequest } from 'ilp-protocol-ccp'
 import { IncomingRoute } from '../types/routing'
 

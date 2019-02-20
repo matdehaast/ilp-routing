@@ -25,4 +25,21 @@ export class Peer {
     this.routes = new PrefixMap()
   }
 
+  getPrefix (prefix: string): IncomingRoute | undefined {
+    return this.routes.get(prefix)
+  }
+
+  insertRoute (route: IncomingRoute) {
+    this.routes.insert(route.prefix, route)
+
+    // TODO Check if actually changed
+    return true
+  }
+
+  deleteRoute (prefix: string) {
+    this.routes.delete(prefix)
+
+    // TODO Check if actually changed
+    return true
+  }
 }

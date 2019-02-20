@@ -10,15 +10,6 @@ import {
 import { IlpPrepare, IlpReply, deserializeIlpPrepare } from 'ilp-packet'
 import { Relation } from '../types/relation'
 
-export function getRelationPriority (relation: Relation): number {
-  return {
-    parent: 0,
-    peer: 1,
-    child: 2,
-    local: 3
-  }[relation]
-}
-
 export interface CcpSenderOpts {
   peerId: string,
   forwardingRoutingTable: ForwardingRoutingTable
