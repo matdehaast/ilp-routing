@@ -1,3 +1,3 @@
 export * from './ilp-router'
 export * from './ilp-peer-controller'
-export * from './ilp-route-manager'
+export { RouteManager } from './ilp-route-manager'

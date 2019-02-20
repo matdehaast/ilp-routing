@@ -1,13 +1,13 @@
-import { Relation } from '../ilp-peer-controller/ccp-sender'
+import { Relation } from '../types/relation'
 import { IlpReply, IlpPrepare } from 'ilp-packet'
 import { Router } from '../ilp-router'
-import { PeerController } from '../ilp-peer-controller'
-import { CcpRouteUpdateRequest, CcpRouteControlRequest } from 'ilp-protocol-ccp';
-import { IncomingRoute } from '../types/routing';
+import { Peer } from '../ilp-peer-controller'
+import { CcpRouteUpdateRequest, CcpRouteControlRequest } from 'ilp-protocol-ccp'
+import { IncomingRoute } from '../types/routing'
 
 export class RouteManager {
 
-  private peers: Map<string, PeerController> = new Map()
+  private peers: Map<string, Peer> = new Map()
   private router: Router
 
   constructor (router: Router) {
@@ -15,8 +15,8 @@ export class RouteManager {
   }
 
   // Possibly also allow a route to be added defaulted?
-  addPeer (peerId: string, relation: Relation, isSender: boolean = false, isReceiver: boolean = false) {
-    const peer = new PeerController({ isReceiver, isSender, sendData: (prepare: IlpPrepare) => Promise.resolve({} as IlpReply), peerId, getPeerRelation: (peerId: string) => relation, forwardingRoutingTable: this.router.getForwardingRoutingTable() })
+  addPeer (peerId: string, relation: Relation) {
+    const peer = new Peer({ peerId: peerId, relation: relation })
     this.peers.set(peerId, peer)
   }
 
@@ -41,7 +41,7 @@ export class RouteManager {
   handleCCPRouteUpdate (peerId: string, routeUpdate: CcpRouteUpdateRequest) {
     const peer = this.getPeer(peerId)
     if (peer) {
-      peer.handleRouteUpdate(routeUpdate)
+      // peer.handleRouteUpdate(routeUpdate)
     } else {
       console.log('No Peer found for given peerId')
     }
@@ -51,7 +51,7 @@ export class RouteManager {
   handleCCPRouteControl (peerId: string, routeControl: CcpRouteControlRequest) {
     const peer = this.getPeer(peerId)
     if (peer) {
-      peer.handleRouteControl(routeControl)
+      // peer.handleRouteControl(routeControl)
     } else {
       console.log('No Peer found for given peerId')
     }

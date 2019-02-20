@@ -1,4 +1,4 @@
-import { Relation } from '../ilp-peer-controller/ccp-sender'
+import { Relation } from '../types/relation'
 
 export type RequestHandler = (payload: any) => Promise<any>
 

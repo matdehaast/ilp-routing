@@ -1,9 +1,8 @@
-import { Peer, RequestHandler } from './peer'
 import RoutingTable from './routing-table'
 import { Route, IncomingRoute } from '../types/routing'
 import ForwardingRoutingTable, { RouteUpdate } from './forwarding-routing-table'
 import { canDragonFilter } from '../lib/dragon'
-import { Relation } from '../ilp-peer-controller/ccp-sender'
+import { Relation } from '../types/relation'
 
 /**
  * Terminology definitions
@@ -12,7 +11,6 @@ import { Relation } from '../ilp-peer-controller/ccp-sender'
 
 export class Router {
 
-  private peers: Map<string, Peer>
   private ownAddress: string
   private routingTable: RoutingTable
   private forwardingRoutingTable: ForwardingRoutingTable
@@ -20,20 +18,6 @@ export class Router {
   constructor () {
     this.routingTable = new RoutingTable()
     this.forwardingRoutingTable = new ForwardingRoutingTable()
-    this.peers = new Map()
-  }
-
-  addPeer (name: string, relation: Relation) {
-    const peer = new Peer(relation)
-    this.peers.set(name, peer)
-  }
-
-  removePeer (name: string) {
-    this.peers.delete(name)
-  }
-
-  getPeer (name: string) {
-    return this.peers.get(name)
   }
 
   setOwnAddress (address: string) {

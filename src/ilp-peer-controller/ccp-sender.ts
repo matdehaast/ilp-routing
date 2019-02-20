@@ -1,6 +1,5 @@
 import ForwardingRoutingTable, { RouteUpdate } from '../ilp-router/forwarding-routing-table'
 import { BroadcastRoute } from '../types/routing'
-// import { Relation } from './relation'
 import {
   CcpRouteControlRequest,
   CcpRouteUpdateRequest,
@@ -9,8 +8,7 @@ import {
   serializeCcpRouteUpdateRequest
 } from 'ilp-protocol-ccp'
 import { IlpPrepare, IlpReply, deserializeIlpPrepare } from 'ilp-packet'
-
-export type Relation = 'parent' | 'child' | 'peer' | 'local'
+import { Relation } from '../types/relation'
 
 export function getRelationPriority (relation: Relation): number {
   return {
