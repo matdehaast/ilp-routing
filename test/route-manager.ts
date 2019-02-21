@@ -2,21 +2,11 @@ import * as Chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as sinon from 'sinon';
-import { Router, PeerController } from '../src';
-import { Peer } from '../src/ilp-router/peer';
-import { CcpRouteUpdateRequest, CcpRoute, CcpRouteControlRequest, Mode } from 'ilp-protocol-ccp'
-import CcpSender, { Relation } from '../src/ilp-peer-controller/ccp-sender';
-import ForwardingRoutingTable, { RouteUpdate } from '../src/ilp-router/forwarding-routing-table'
-import { IlpPrepare, IlpReply, IlpReject } from 'ilp-packet';
-
+import { Router } from '../src';
 import { RouteManager } from '../src/ilp-route-manager'
-
+import { CcpRouteUpdateRequest, CcpRoute } from 'ilp-protocol-ccp';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
-
-const dummyHandler = ()  => Promise.resolve('Test')
-const dummyPeerResolver = (peerId: string) => 'parent' as Relation
-const dummySendData = (packet: IlpPrepare) => Promise.resolve({data: Buffer.from(''), fulfillment: Buffer.from('')} as IlpReply)
 
 describe('ilp-route-manager', function () {
   let router: Router
@@ -79,4 +69,72 @@ describe('ilp-route-manager', function () {
       assert.isUndefined(nextHop)
     })
   })
+
+  // describe('CCP Updates', function () {
+  //   let routeManager: RouteManager
+
+  //   beforeEach(function() {
+  //     routeManager = new RouteManager(router)
+  //     routeManager.addPeer('harry', 'peer')
+  //   })
+
+  //   it('incoming route update adds route to peer routing table', function() {
+  //     const newRoute = {
+  //       prefix: 'g.new.route',
+  //       path: [],
+  //       auth: Buffer.from(''),
+  //       props: []
+  //     } as CcpRoute
+
+  //     const ccpUpdateRequest = {
+  //       speaker: 'string',
+  //       routingTableId: '3b069822-a754-4e44-8a60-0f9f7084144d',
+  //       currentEpochIndex: 5,
+  //       fromEpochIndex: 0,
+  //       toEpochIndex: 5,
+  //       holdDownTime: 45000,
+  //       newRoutes: [newRoute],
+  //       withdrawnRoutes: new Array<string>(),
+  //     } as CcpRouteUpdateRequest
+
+  //     routeManager.handleCCPRouteUpdate('harry', ccpUpdateRequest)
+
+  //     const peer = routeManager.getPeer('harry')
+  //     if(peer) {
+  //       assert.deepEqual(peer.getPrefix('g.new.route'), {
+  //         prefix: 'g.new.route',
+  //         path: []
+  //       })
+  //       return
+  //     }
+  //     throw Error('Peer not found')
+  //   })
+
+  //   it('incoming route update with withdrawn routes removes route in peer routing table', function() {
+  //     const peer = routeManager.getPeer('harry')
+  //     if(peer) {
+  //       peer.insertRoute({
+  //         prefix: 'g.new.route',
+  //         path: [],
+  //       })
+  //       assert.isDefined(peer.getPrefix('g.new.route'))
+
+  //       const ccpUpdateRequest = {
+  //         speaker: 'string',
+  //         routingTableId: '3b069822-a754-4e44-8a60-0f9f7084144d',
+  //         currentEpochIndex: 5,
+  //         fromEpochIndex: 0,
+  //         toEpochIndex: 5,
+  //         holdDownTime: 45000,
+  //         newRoutes: [],
+  //         withdrawnRoutes: ['g.new.route'],
+  //       } as CcpRouteUpdateRequest
+  
+  //       routeManager.handleCCPRouteUpdate('harry', ccpUpdateRequest)
+  //       assert.isUndefined(peer.getPrefix('g.new.route'))
+  //       return
+  //     }
+  //     throw Error('Peer not found')
+  //   })
+  // })
 })

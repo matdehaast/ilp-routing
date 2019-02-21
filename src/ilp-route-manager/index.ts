@@ -1,7 +1,7 @@
 import { Relation } from '../types/relation'
 import { IlpReply, IlpPrepare } from 'ilp-packet'
 import { Router } from '../ilp-router'
-import { Peer } from '../ilp-peer'
+import { Peer } from './peer'
 import { CcpRouteUpdateRequest, CcpRouteControlRequest } from 'ilp-protocol-ccp'
 import { IncomingRoute } from '../types/routing'
 
@@ -37,23 +37,4 @@ export class RouteManager {
     }
   }
 
-  // Should be handled as an RXJS stream
-  handleCCPRouteUpdate (peerId: string, routeUpdate: CcpRouteUpdateRequest) {
-    const peer = this.getPeer(peerId)
-    if (peer) {
-      // peer.handleRouteUpdate(routeUpdate)
-    } else {
-      console.log('No Peer found for given peerId')
-    }
-  }
-
-  // Need to work out how this can be handled
-  handleCCPRouteControl (peerId: string, routeControl: CcpRouteControlRequest) {
-    const peer = this.getPeer(peerId)
-    if (peer) {
-      // peer.handleRouteControl(routeControl)
-    } else {
-      console.log('No Peer found for given peerId')
-    }
-  }
 }

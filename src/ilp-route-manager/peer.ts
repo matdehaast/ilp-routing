@@ -1,10 +1,7 @@
-import CcpSender from './ccp-sender'
-import { CcpRouteControlRequest, CcpRouteUpdateRequest } from 'ilp-protocol-ccp'
-import ForwardingRoutingTable from '../ilp-router/forwarding-routing-table'
-import { IlpPacket, IlpPrepare, IlpReply } from 'ilp-packet'
 import PrefixMap from '../lib/prefix-map'
 import { IncomingRoute } from '../types/routing'
 import { Relation } from '../types/relation'
+import { CcpRouteUpdateRequest } from 'ilp-protocol-ccp';
 
 export interface PeerOpts {
   peerId: string,
@@ -16,6 +13,10 @@ export class Peer {
   private peerId: string
   private relation: Relation
   private routes: PrefixMap<IncomingRoute>
+
+  // Used for syncing routing data
+  private routingTableId: string = '00000000-0000-0000-0000-000000000000' // Based on the forwarding routing table of our peer
+  private epoch: number = 0
 
   constructor (options: PeerOpts) {
     this.peerId = options.peerId
@@ -41,5 +42,9 @@ export class Peer {
 
     // TODO Check if actually changed
     return true
+  }
+
+  getRelation (): Relation {
+    return this.relation
   }
 }

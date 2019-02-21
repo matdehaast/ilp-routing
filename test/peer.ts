@@ -2,7 +2,7 @@ import * as Chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as sinon from 'sinon';
-import { Peer } from '../src';
+import { Peer } from '../src/ilp-route-manager/peer';
 import { IncomingRoute } from '../src/types/routing';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
