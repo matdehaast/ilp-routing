@@ -52,7 +52,7 @@ export class RouteManager {
    * get best peer for prefix and updateRouting based on the new route
    * @param prefix prefix
    */
-  updatePrefix (prefix: string) {
+  private updatePrefix (prefix: string) {
     const newBest = this.getBestPeerForPrefix(prefix)
     this.updateRouteInRouter(prefix, newBest)
   }
@@ -64,7 +64,7 @@ export class RouteManager {
    * 3. If not exact route need to find 'bestRoute' based on peers
    * @param prefix prefix
    */
-  getBestPeerForPrefix (prefix: string): Route | undefined {
+  private getBestPeerForPrefix (prefix: string): Route | undefined {
     const bestRoute = Array.from(this.peers.values())
       .map(peer => peer.getPrefix(prefix))
       .filter((a): a is IncomingRoute => !!a)

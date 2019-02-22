@@ -7,7 +7,7 @@ import { IncomingRoute } from '../src/types/routing';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
 
-describe('ilp-peer', function () {
+describe('peer', function () {
   let peer: Peer
 
   beforeEach(function() {
@@ -19,6 +19,7 @@ describe('ilp-peer', function () {
 
   it('can insert a route', function () {
     const incomingRoute: IncomingRoute = {
+      peer: 'harry',
       prefix: 'g.harry',
       path: []
     }
@@ -31,6 +32,7 @@ describe('ilp-peer', function () {
 
   it('can delete a route', function () {
     const incomingRoute: IncomingRoute = {
+      peer: 'harry',
       prefix: 'g.harry',
       path: []
     }
@@ -44,19 +46,23 @@ describe('ilp-peer', function () {
 
   it('can get a route', function () {
     peer.insertRoute({
+      peer: 'harry',
       prefix: 'g.harry',
       path: []
     })
     peer.insertRoute({
+      peer: 'harry',
       prefix: 'g.sally',
       path: []
     })
 
     assert.deepEqual(peer.getPrefix('g.harry'), {
+      peer: 'harry',
       prefix: 'g.harry',
       path: []
     })
     assert.deepEqual(peer.getPrefix('g.sally'), {
+      peer: 'harry',
       prefix: 'g.sally',
       path: []
     })

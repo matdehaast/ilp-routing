@@ -1,5 +1,5 @@
 import RoutingTable from './routing-table'
-import { Route, IncomingRoute } from '../types/routing'
+import { Route } from '../types/routing'
 import ForwardingRoutingTable, { RouteUpdate } from './forwarding-routing-table'
 import { canDragonFilter } from '../lib/dragon'
 import { Relation } from '../types/relation'

@@ -55,22 +55,61 @@ describe('ilp-route-manager', function () {
       peer = routeManager.getPeer('harry')
     })
 
-    it('adding a route adds it to peer routing table', function () {
-      routeManager.addRoute({
-        peer: 'harry',
-        prefix: 'g.harry',
-        path: []
+    describe('adding', function () {
+      it('adding a route adds it to peer routing table', function () {
+        routeManager.addRoute({
+          peer: 'harry',
+          prefix: 'g.harry',
+          path: []
+        })
+  
+        const route = peer!.getPrefix('g.harry')
+  
+        assert.deepEqual(route, {
+          peer: 'harry',
+          prefix: 'g.harry',
+          path: []
+        })
       })
 
-      const route = peer!.getPrefix('g.harry')
+      it('adding a better route adds it to the routingTable', function () {
+        routeManager.addPeer('mary', 'child')
+        routeManager.addRoute({
+          peer: 'harry',
+          prefix: 'g.nick',
+          path: ['g.potter']
+        })
 
-      assert.deepEqual(route, {
-        peer: 'harry',
-        prefix: 'g.harry',
-        path: []
+        routeManager.addRoute({
+          peer: 'mary',
+          prefix: 'g.nick',
+          path: []
+        })
+    
+        const nextHop = router.nextHop('g.nick')
+        assert.equal(nextHop, 'mary')
+      })
+
+      it('adding a worse route does not update routing table', function () {
+        routeManager.addPeer('mary', 'child')
+        routeManager.addRoute({
+          peer: 'harry',
+          prefix: 'g.harry',
+          path: []
+        })
+
+        routeManager.addRoute({
+          peer: 'mary',
+          prefix: 'g.harry',
+          path: ['g.turtle']
+        })
+    
+        const nextHop = router.nextHop('g.harry')
+        assert.equal(nextHop, 'harry')
       })
     })
 
+    
     it('removing a route removes from peer routing table', function () {
       routeManager.addRoute({
         peer: 'harry',
@@ -96,5 +135,10 @@ describe('ilp-route-manager', function () {
       let nextHop = router.getRoutingTable().get('g.harry')
       assert.isUndefined(nextHop)
     })
+
+    it('removing a peer should remove all its routes from the routing table', function() {
+      
+    })
+
   })
 })
