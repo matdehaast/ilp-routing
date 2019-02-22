@@ -99,7 +99,8 @@ export class RouteManager {
 
     return bestRoute && {
       nextHop: bestRoute.peer,
-      path: bestRoute.path
+      path: bestRoute.path,
+      weight: bestRoute.weight
       // auth: bestRoute.auth
     }
   }

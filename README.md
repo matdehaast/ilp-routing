@@ -10,26 +10,21 @@
 // TypeScript
 import Router from 'ilp-router'
 
-const router = new Router()
-
-// Adding Peers
-const peerRequestHandler = (payload) => Promise.resolve(payload)
-router.addPeer('harry', peerRequestHandler)
-
-// Adding Routes
-router.addRoute('harry', {
-  prefix: 'g.harry',
-  path: string[]
-})
-
-// Making a request for the router to route.
-const response = await router.request('g.harry.met.sally', payload)
 
 ```
 
 ## Project
 
 
+## Members
+
+### ilp-router
+Stand alone router for ilp address space. Contains a routing table and a forwarding routing table. Routing table is used to determine where the nextHop is based on a given address. The forwarding routing table is used to broadcasting routes to peers.
+
+### ilp-route-manager
+A route manager that deals with adding/removing peers and adding/removing routes for given peers. Based on these it will update the routing table accordingly.
+
+#### Note CCP is outside the scope of the functionalities of this library.
 
 ### Folders
 
@@ -44,6 +39,14 @@ The NPM package will not contain any TypeScript files (`*.ts`) but will have typ
   - `lint`  : Run the linter over the project
   - `test`  : Run the unit tests and produce a code coverage report
   - `doc`   : Build the docs
+
+### TODO
+- [ ] Add Auth
+- [ ] Add weight to lessen the need for relations to be used
+- [ ] Add Performance Regression
+- [ ] Increase test coverage
+- [ ] Ensure adding and removing routes are deterministic and no race conditions exist
+
 
 ### Future notes/reading
 Implement BGP type path based filtering
