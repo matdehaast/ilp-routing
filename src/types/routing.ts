@@ -1,6 +1,8 @@
 export interface IncomingRoute {
+  peer: string,
   prefix: string,
-  path: string[]
+  path: string[],
+  weight?: number,
 }
 
 export interface Route {

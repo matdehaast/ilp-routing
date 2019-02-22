@@ -5,6 +5,7 @@ import * as sinon from 'sinon';
 import { Router } from '../src';
 import { RouteManager } from '../src/ilp-route-manager'
 import { CcpRouteUpdateRequest, CcpRoute } from 'ilp-protocol-ccp';
+import { Peer } from '../src/ilp-route-manager/peer';
 Chai.use(chaiAsPromised)
 const assert = Object.assign(Chai.assert, sinon.assert)
 
@@ -19,6 +20,8 @@ describe('ilp-route-manager', function () {
 
     it('can be instantiated', function () {
       let routeManager = new RouteManager(router)
+
+      assert.instanceOf(routeManager, RouteManager)
     })
   })
 
@@ -28,7 +31,9 @@ describe('ilp-route-manager', function () {
 
       routeManager.addPeer('harry', 'peer')
 
+      const peer = routeManager.getPeer('harry')
       assert.isDefined(routeManager.getPeer('harry'))
+      assert.instanceOf(peer, Peer)
     })
 
     it('can remove a peer', function () {
@@ -41,26 +46,49 @@ describe('ilp-route-manager', function () {
   })
 
   describe('route', function () {
-    it('can add a route', function () {
-      let routeManager = new RouteManager(router)
+    let routeManager: RouteManager
+    let peer: Peer | undefined
 
+    beforeEach(function () {
+      routeManager = new RouteManager(router)
       routeManager.addPeer('harry', 'peer')
-      routeManager.addRoute('harry', {
+      peer = routeManager.getPeer('harry')
+    })
+
+    it('adding a route adds it to peer routing table', function () {
+      routeManager.addRoute({
+        peer: 'harry',
         prefix: 'g.harry',
         path: []
       })
 
-      let nextHop = router.getRoutingTable().get('g.harry')
-      assert.deepEqual(nextHop, {
-        nextHop: 'harry',
+      const route = peer!.getPrefix('g.harry')
+
+      assert.deepEqual(route, {
+        peer: 'harry',
+        prefix: 'g.harry',
         path: []
       })
+    })
+
+    it('removing a route removes from peer routing table', function () {
+      routeManager.addRoute({
+        peer: 'harry',
+        prefix: 'g.harry',
+        path: []
+      })
+
+      routeManager.removeRoute('harry', 'g.harry')
+
+      const route = peer!.getPrefix('g.harry')
+      assert.isUndefined(route)
     })
 
     it('does not add a route for a peer that does not exist', function () {
       let routeManager = new RouteManager(router)
 
-      routeManager.addRoute('harry', {
+      routeManager.addRoute({
+        peer: 'harry',
         prefix: 'g.harry',
         path: []
       })
@@ -69,72 +97,4 @@ describe('ilp-route-manager', function () {
       assert.isUndefined(nextHop)
     })
   })
-
-  // describe('CCP Updates', function () {
-  //   let routeManager: RouteManager
-
-  //   beforeEach(function() {
-  //     routeManager = new RouteManager(router)
-  //     routeManager.addPeer('harry', 'peer')
-  //   })
-
-  //   it('incoming route update adds route to peer routing table', function() {
-  //     const newRoute = {
-  //       prefix: 'g.new.route',
-  //       path: [],
-  //       auth: Buffer.from(''),
-  //       props: []
-  //     } as CcpRoute
-
-  //     const ccpUpdateRequest = {
-  //       speaker: 'string',
-  //       routingTableId: '3b069822-a754-4e44-8a60-0f9f7084144d',
-  //       currentEpochIndex: 5,
-  //       fromEpochIndex: 0,
-  //       toEpochIndex: 5,
-  //       holdDownTime: 45000,
-  //       newRoutes: [newRoute],
-  //       withdrawnRoutes: new Array<string>(),
-  //     } as CcpRouteUpdateRequest
-
-  //     routeManager.handleCCPRouteUpdate('harry', ccpUpdateRequest)
-
-  //     const peer = routeManager.getPeer('harry')
-  //     if(peer) {
-  //       assert.deepEqual(peer.getPrefix('g.new.route'), {
-  //         prefix: 'g.new.route',
-  //         path: []
-  //       })
-  //       return
-  //     }
-  //     throw Error('Peer not found')
-  //   })
-
-  //   it('incoming route update with withdrawn routes removes route in peer routing table', function() {
-  //     const peer = routeManager.getPeer('harry')
-  //     if(peer) {
-  //       peer.insertRoute({
-  //         prefix: 'g.new.route',
-  //         path: [],
-  //       })
-  //       assert.isDefined(peer.getPrefix('g.new.route'))
-
-  //       const ccpUpdateRequest = {
-  //         speaker: 'string',
-  //         routingTableId: '3b069822-a754-4e44-8a60-0f9f7084144d',
-  //         currentEpochIndex: 5,
-  //         fromEpochIndex: 0,
-  //         toEpochIndex: 5,
-  //         holdDownTime: 45000,
-  //         newRoutes: [],
-  //         withdrawnRoutes: ['g.new.route'],
-  //       } as CcpRouteUpdateRequest
-  
-  //       routeManager.handleCCPRouteUpdate('harry', ccpUpdateRequest)
-  //       assert.isUndefined(peer.getPrefix('g.new.route'))
-  //       return
-  //     }
-  //     throw Error('Peer not found')
-  //   })
-  // })
 })

@@ -18,8 +18,8 @@ describe('ilp-router', function () {
     })
 
     it('can add a route for a peer', function() {
-      router.addRoute('harry', {
-          prefix: 'g.harry',
+      router.addRoute('g.harry', {
+          nextHop: 'harry',
           path: [],
       })
 
@@ -33,10 +33,10 @@ describe('ilp-router', function () {
     })
 
     it('can remove a route for a peer', function() {
-      router.addRoute('harry', {
-        prefix: 'g.harry',
+      router.addRoute('g.harry', {
+        nextHop: 'harry',
         path: [],
-      })
+    })
 
       router.removeRoute('g.harry')
 
@@ -51,8 +51,8 @@ describe('ilp-router', function () {
 
     beforeEach( function() {
       router = new Router()
-      router.addRoute('harry', {
-        prefix: 'g.harry',
+      router.addRoute('g.harry', {
+        nextHop: 'harry',
         path: [],
       })
     })

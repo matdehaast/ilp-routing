@@ -1,9 +1,7 @@
 import { Relation } from '../types/relation'
-import { IlpReply, IlpPrepare } from 'ilp-packet'
 import { Router } from '../ilp-router'
 import { Peer } from './peer'
-import { CcpRouteUpdateRequest, CcpRouteControlRequest } from 'ilp-protocol-ccp'
-import { IncomingRoute } from '../types/routing'
+import { IncomingRoute, Route } from '../types/routing'
 
 export class RouteManager {
 
@@ -29,12 +27,88 @@ export class RouteManager {
   }
 
   // Do a check if the peerId exists as a peer and then also add the route to the routing table
-  addRoute (peerId: string, route: IncomingRoute) {
-    if (this.getPeer(peerId)) {
-      this.router.addRoute(peerId, route)
+  addRoute (route: IncomingRoute, weight?: number) {
+    const peer = this.getPeer(route.peer)
+    if (peer) {
+      // Gotcha the insert of the route into the peers routing table must occur before calling updatePrefix
+      peer.insertRoute(route)
+      this.updatePrefix(route.prefix)
     } else {
       console.log('no peer found to add route for')
     }
   }
 
+  removeRoute (peerId: string, prefix: string) {
+    const peer = this.getPeer(peerId)
+    if (peer) {
+      peer.deleteRoute(prefix)
+      this.updatePrefix(prefix)
+    } else {
+      console.log('no peer found to add route for')
+    }
+  }
+
+  /**
+   * get best peer for prefix and updateRouting based on the new route
+   * @param prefix prefix
+   */
+  updatePrefix (prefix: string) {
+    const newBest = this.getBestPeerForPrefix(prefix)
+    this.updateRouteInRouter(prefix, newBest)
+  }
+
+  /**
+   * Find the best peer for the prefix routing to
+   * 1. Ideal to use configure routes
+   * 2. Else look in localRoutes as built before to find exact route
+   * 3. If not exact route need to find 'bestRoute' based on peers
+   * @param prefix prefix
+   */
+  getBestPeerForPrefix (prefix: string): Route | undefined {
+    const bestRoute = Array.from(this.peers.values())
+      .map(peer => peer.getPrefix(prefix))
+      .filter((a): a is IncomingRoute => !!a)
+      .sort((a?: IncomingRoute, b?: IncomingRoute) => {
+        if (!a && !b) {
+          return 0
+        } else if (!a) {
+          return 1
+        } else if (!b) {
+          return -1
+        }
+
+        // First sort by peer weight
+        const weightA = a.weight ? a.weight : 0
+        const weightB = b.weight ? b.weight : 0
+
+        if (weightA !== weightB) {
+          return weightB - weightA
+        }
+
+        // Then sort by path length
+        const pathA = a.path.length
+        const pathB = b.path.length
+
+        if (pathA !== pathB) {
+          return pathA - pathB
+        }
+
+        // Catch all
+        return 0
+      })[0]
+
+    return bestRoute && {
+      nextHop: bestRoute.peer,
+      path: bestRoute.path
+      // auth: bestRoute.auth
+    }
+  }
+
+  private updateRouteInRouter (prefix: string, newBest: Route | undefined) {
+    if (newBest) {
+      this.router.addRoute(prefix, newBest)
+    } else {
+      this.router.removeRoute(prefix)
+    }
+  }
 }
