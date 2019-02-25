@@ -125,7 +125,7 @@ describe('ilp-route-manager', function () {
 
     it('does not add a route for a peer that does not exist', function () {
       routeManager.addRoute({
-        peer: 'harry',
+        peer: 'mary',
         prefix: 'g.harry',
         path: []
       })

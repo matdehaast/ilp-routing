@@ -34,7 +34,7 @@ export class RouteManager {
   }
 
   // Do a check if the peerId exists as a peer and then also add the route to the routing table
-  addRoute (route: IncomingRoute, weight?: number) {
+  addRoute (route: IncomingRoute) {
     const peer = this.getPeer(route.peer)
     if (peer) {
       // Gotcha the insert of the route into the peers routing table must occur before calling updatePrefix
