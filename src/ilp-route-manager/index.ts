@@ -23,7 +23,14 @@ export class RouteManager {
   }
 
   removePeer (peerId: string) {
-    this.peers.delete(peerId)
+    const peer = this.getPeer(peerId)
+    if (peer) {
+      const prefixes = peer.getPrefixes()
+      this.peers.delete(peerId)
+      prefixes.forEach(prefix => this.updatePrefix(prefix))
+    } else {
+      console.log('no peer found to remove peer')
+    }
   }
 
   // Do a check if the peerId exists as a peer and then also add the route to the routing table

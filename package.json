@@ -1,7 +1,7 @@
 {
   "name": "ilp-router",
   "version": "1.0.0",
-  "description": "Routing Component for Interledger modules",
+  "description": "Routing Library for Interledger modules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [

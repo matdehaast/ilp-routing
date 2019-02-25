@@ -39,6 +39,10 @@ export class Peer {
     return true
   }
 
+  getPrefixes () {
+    return this.routes.keys()
+  }
+
   getRelation (): Relation {
     return this.relation
   }

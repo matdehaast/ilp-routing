@@ -124,8 +124,6 @@ describe('ilp-route-manager', function () {
     })
 
     it('does not add a route for a peer that does not exist', function () {
-      let routeManager = new RouteManager(router)
-
       routeManager.addRoute({
         peer: 'harry',
         prefix: 'g.harry',
@@ -137,7 +135,16 @@ describe('ilp-route-manager', function () {
     })
 
     it('removing a peer should remove all its routes from the routing table', function() {
-      
+      routeManager.addRoute({
+        peer: 'harry',
+        prefix: 'g.harry',
+        path: []
+      })
+      assert.isDefined(router.getRoutingTable().get('g.harry'))
+
+      routeManager.removePeer('harry')
+
+      assert.isUndefined(router.getRoutingTable().get('g.harry'))
     })
 
   })

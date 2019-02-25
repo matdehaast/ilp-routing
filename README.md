@@ -46,7 +46,8 @@ The NPM package will not contain any TypeScript files (`*.ts`) but will have typ
 - [ ] Add Performance Regression
 - [ ] Increase test coverage
 - [ ] Ensure adding and removing routes are deterministic and no race conditions exist
-
+- [ ] Add dragon filtering back to the layer between the routing and forwarding routing table
+- [ ] Create a more favorable data structure for Peers incoming routes table. One way this can be achieved is having a write heavy data structure that is read fast. (This is probably preferable.)
 
 ### Future notes/reading
 Implement BGP type path based filtering
