@@ -18,10 +18,6 @@ export class RouteManager {
     this.peers.set(peerId, peer)
   }
 
-  getPeer (peerId: string) {
-    return this.peers.get(peerId)
-  }
-
   removePeer (peerId: string) {
     const peer = this.getPeer(peerId)
     if (peer) {
@@ -31,6 +27,14 @@ export class RouteManager {
     } else {
       console.log('no peer found to remove peer')
     }
+  }
+
+  getPeer (peerId: string) {
+    return this.peers.get(peerId)
+  }
+
+  getPeerList () {
+    return Array.from(this.peers.keys())
   }
 
   // Do a check if the peerId exists as a peer and then also add the route to the routing table
@@ -107,8 +111,8 @@ export class RouteManager {
     return bestRoute && {
       nextHop: bestRoute.peer,
       path: bestRoute.path,
-      weight: bestRoute.weight
-      // auth: bestRoute.auth
+      weight: bestRoute.weight,
+      auth: bestRoute.auth
     }
   }
 

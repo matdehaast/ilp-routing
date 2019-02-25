@@ -1,10 +1,14 @@
 import PrefixMap from '../lib/prefix-map'
 import { IncomingRoute } from '../types/routing'
 import { Relation } from '../types/relation'
+import { randomBytes } from 'crypto'
+import { hmac, sha256 } from '../lib/utils';
 
 export interface PeerOpts {
   peerId: string,
-  relation: Relation
+  relation: Relation,
+  routingSecret?: string,
+  shouldAuth?: boolean
 }
 
 export class Peer {
@@ -13,9 +17,15 @@ export class Peer {
   private relation: Relation
   private routes: PrefixMap<IncomingRoute>
 
-  constructor (options: PeerOpts) {
-    this.peerId = options.peerId
-    this.relation = options.relation
+  private routingSecret: Buffer
+  private shouldAuth: boolean
+
+  constructor ({ peerId, relation, routingSecret, shouldAuth }: PeerOpts) {
+    this.peerId = peerId
+    this.relation = relation
+
+    this.routingSecret = routingSecret ? Buffer.from(routingSecret, 'base64') : randomBytes(32)
+    this.shouldAuth = shouldAuth ? shouldAuth : false
 
     // TODO: Possibly inefficient instantiating this if not a ccp-receiver? Though the code is quite clean without needing to pass the data to here
     this.routes = new PrefixMap()
@@ -26,8 +36,14 @@ export class Peer {
   }
 
   insertRoute (route: IncomingRoute) {
-    this.routes.insert(route.prefix, route)
 
+    if (this.shouldAuth) {
+      const auth = hmac(this.routingSecret, route.prefix)
+      if (sha256(auth) !== route.auth) {
+        return false
+      }
+    }
+    this.routes.insert(route.prefix, route)
     // TODO Check if actually changed
     return true
   }

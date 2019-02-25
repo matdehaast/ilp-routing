@@ -3,6 +3,7 @@ import { Route } from '../types/routing'
 import ForwardingRoutingTable, { RouteUpdate } from './forwarding-routing-table'
 import { canDragonFilter } from '../lib/dragon'
 import { Relation } from '../types/relation'
+import { sha256 } from '../lib/utils';
 
 /**
  * Terminology definitions
@@ -105,7 +106,8 @@ export class Router {
     if (route) {
       route = {
         ...route,
-        path: [this.getOwnAddress(), ...route.path]
+        path: [this.getOwnAddress(), ...route.path],
+        auth: route.auth ? sha256(route.auth) : Buffer.from('')
       }
 
       if (

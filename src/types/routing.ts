@@ -3,12 +3,14 @@ export interface IncomingRoute {
   prefix: string,
   path: string[],
   weight?: number,
+  auth?: Buffer
 }
 
 export interface Route {
   nextHop: string,
   path: string[],
   weight?: number
+  auth?: Buffer
 }
 
 export interface BroadcastRoute extends Route {

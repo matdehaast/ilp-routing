@@ -1,4 +1,14 @@
-import { randomBytes } from 'crypto'
+import { randomBytes, createHash, createHmac } from 'crypto'
+
+export const sha256 = (preimage: Buffer) => {
+  return createHash('sha256').update(preimage).digest()
+}
+
+export function hmac (secret: Buffer, message: string) {
+  const hmac = createHmac('sha256', secret)
+  hmac.update(message, 'utf8')
+  return hmac.digest()
+}
 
 export function uuid () {
   const random = randomBytes(16)

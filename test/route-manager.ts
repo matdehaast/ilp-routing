@@ -43,6 +43,15 @@ describe('ilp-route-manager', function () {
 
       assert.isUndefined(routeManager.getPeer('harry'))
     })
+
+    it('can get all peers', function () {
+      let routeManager = new RouteManager(router)
+
+      routeManager.addPeer('harry', 'peer')
+      
+      const peers = routeManager.getPeerList()
+      assert.deepEqual(peers, ['harry'])
+    })
   })
 
   describe('route', function () {
@@ -107,6 +116,11 @@ describe('ilp-route-manager', function () {
         const nextHop = router.nextHop('g.harry')
         assert.equal(nextHop, 'harry')
       })
+    })
+
+    // Section for testing weighting stuff
+    describe('weighting', function () {
+
     })
 
     
